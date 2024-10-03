@@ -103,4 +103,182 @@ head(dist_route_df)
 - 5.The number of distinct stations serving the A train and are ADA compliant is `r nrow(filter(dist_route_df, train == "A" & ada == "TRUE"))`.
 
   
+# Problem 2
 
+First, 
+
+Read and clean the `Mr. Trash Wheel` dataset.
+
+```{r trash_data}
+mr_trash_path = "./data/202309 Trash Wheel Collection Data.xlsx"
+mr_trash = 
+  read_excel(
+    path = mr_trash_path,
+    sheet = "Mr. Trash Wheel",
+    range = cell_cols("A:N")
+  ) %>%
+  janitor::clean_names() %>% 
+  drop_na(dumpster) %>% 
+  mutate(
+    trash_wheel = "Mr. Trash Wheel"
+  )
+
+```
+
+Read and clean the `Professor Trash Wheel` dataset.
+
+```{r prof_trash_data}
+prof_trash = 
+  read_excel(
+    path = mr_trash_path,
+    sheet = "Professor Trash Wheel",
+    range = cell_cols("A:N")
+  ) %>%
+  janitor::clean_names() %>% 
+  drop_na(dumpster) %>% 
+  mutate(
+    trash_wheel = "Professor Trash Wheel"
+  )
+
+```
+
+Read and clean the `Gwynnda` dataset.
+
+```{r gwynnda_trash_data}
+gwynnda_trash = 
+  read_excel(
+    path = mr_trash_path,
+    sheet = "Gwynnda Trash Wheel",
+    range = cell_cols("A:N")
+  ) %>%
+  janitor::clean_names() %>% 
+  drop_na(dumpster) %>% 
+  mutate(
+    trash_wheel = "Gwynnda"
+  )
+
+```
+
+Get the common columns of these datasets and check missing data.
+```{r prepare for merge}
+#Get common and unique columns of all dataframes
+required_columns <- c("dumpster", "month", "year", "date", "weight_tons", "volume_cubic_yards", 
+                      "plastic_bottles", "polystyrene", "cigarette_butts", "glass_bottles", 
+                      "plastic_bags", "wrappers", "homes_powered", "trash_wheel")
+
+#Check and add missing columns
+add_missing_columns <- function(df, required_columns) {
+  missing_cols <- setdiff(required_columns, names(df))
+#Add NA for missing data
+  df[missing_cols] <- NA  
+  return(df)
+}
+
+mr_trash <- add_missing_columns(mr_trash, required_columns)
+prof_trash <- add_missing_columns(prof_trash, required_columns)
+gwynnda_trash <- add_missing_columns(gwynnda_trash, required_columns)
+
+```
+
+```{r conversion}
+#Conversion of column types
+mr_trash <- mr_trash %>%
+  mutate(
+    month = as.character(month),
+    year = as.character(year),
+    date = as.Date(date),
+    weight_tons = as.numeric(weight_tons),
+    volume_cubic_yards = as.numeric(volume_cubic_yards),
+    plastic_bottles = as.numeric(plastic_bottles),
+    polystyrene = as.numeric(polystyrene),
+    cigarette_butts = as.numeric(cigarette_butts),
+    glass_bottles = as.numeric(glass_bottles),
+    plastic_bags = as.numeric(plastic_bags),
+    wrappers = as.numeric(wrappers),
+    homes_powered = as.numeric(homes_powered)
+  )
+
+prof_trash <- prof_trash %>%
+  mutate(
+    month = as.character(month),
+    year = as.character(year),
+    date = as.Date(date),
+    weight_tons = as.numeric(weight_tons),
+    volume_cubic_yards = as.numeric(volume_cubic_yards),
+    plastic_bottles = as.numeric(plastic_bottles),
+    polystyrene = as.numeric(polystyrene),
+    cigarette_butts = as.numeric(cigarette_butts),
+    glass_bottles = as.numeric(glass_bottles),
+    plastic_bags = as.numeric(plastic_bags),
+    wrappers = as.numeric(wrappers),
+    homes_powered = as.numeric(homes_powered)
+  )
+
+gwynnda_trash <- gwynnda_trash %>%
+  mutate(
+    month = as.character(month),
+    year = as.character(year),
+    date = as.Date(date),
+    weight_tons = as.numeric(weight_tons),
+    volume_cubic_yards = as.numeric(volume_cubic_yards),
+    plastic_bottles = as.numeric(plastic_bottles),
+    polystyrene = as.numeric(polystyrene),
+    cigarette_butts = as.numeric(cigarette_butts),
+    glass_bottles = as.numeric(glass_bottles),
+    plastic_bags = as.numeric(plastic_bags),
+    wrappers = as.numeric(wrappers),
+    homes_powered = as.numeric(homes_powered)
+  )
+
+```
+
+Finally we can merge the three datasets.
+```{r merge}
+trash_df <- bind_rows(mr_trash, prof_trash, gwynnda_trash)
+
+str(trash_df)
+
+```
+
+And it works!
+
+Now we can observe and describe the merged data frame.
+
+```{r describe}
+total_observations <- nrow(trash_df)
+
+variable_names <- names(trash_df)
+
+```
+
+And we can calculate the sprots balls of Mr Trash Wheel.
+
+```{r balls}
+mr_trash_balls <- trash_df %>%
+  filter(trash_wheel == "Mr. Trash Wheel") %>%
+  summarize(total_balls = as.integer(round(sum(sports_balls, na.rm = TRUE)))) %>%
+  pull(total_balls)
+
+```
+
+And we can calculate the total weight of trash collected by Professor Trash Wheel and the total number of cigarette butts collected by Gwynnda in June of 2022.
+
+```{r calculating}
+
+total_weight_professor <- trash_df %>%
+  filter(trash_wheel == "Professor Trash Wheel") %>%
+  summarize(total_weight = sum(weight_tons, na.rm = TRUE)) %>%
+  pull(total_weight)
+
+gwynnda_cig_butts_june_2022 <- trash_df %>%
+  filter(trash_wheel == "Gwynnda", year == "2022", month == "June") %>%
+  summarize(total_cig_butts = sum(cigarette_butts, na.rm = TRUE)) %>%
+  pull(total_cig_butts)
+
+```
+
+* **Answers:**
+- 1.Mr. Trash Wheel has collected a total of `r mr_trash_balls` basketballs.
+- 2.The variables of the merged data frame include: `r variable_names`, for example, `weight_tons` represents the weight of each garbage collection, `plastic_bottles` represents the number of plastic bottles collected, and `cigarette_butts` represents the number of cigarette butts collected.
+- 3.The total weight of trash collected by `Professor Trash Wheel` is `r total_weight_professor` tons.
+- 4.The total number of cigarette butts collected by `Gwynnda` in June 2022 was `r gwynnda_cig_butts_june_2022`.
