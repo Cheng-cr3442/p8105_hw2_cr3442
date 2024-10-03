@@ -1,0 +1,43 @@
+---
+title: "p8105_hw2_cr3442"
+author: "Cheng Rao"
+date: "2024-10-02"
+output: github_document
+---
+
+```{r global_options, include = FALSE}
+knitr::opts_chunk$set(warning = FALSE,message = FALSE,tidy = TRUE)
+```
+
+```{r setup, include = FALSE}
+library(tidyverse)
+library(readxl)
+```
+
+# Problem 1
+
+First, let us read and clean the NYC Transit data.
+
+```{r nyc_data}
+#Read and clean the NYC Transit data
+nyc_trans_df = 
+  read_csv(
+    "./data/NYC_Transit_Subway_Entrance_And_Exit_Data.csv",
+  ) %>%
+  janitor::clean_names() %>% 
+  
+#Retain line, station, name, station latitude / longitude, routes served, entry, vending, entrance type, and ADA compliance
+  select(
+    .,line, station_name, station_latitude, station_longitude, starts_with("route"), entry, vending, entrance_type, ada
+    )  %>%
+  
+#Convert the entry variable from character to a logical variable
+  mutate(
+    entry = recode(entry, "YES" = TRUE, "NO" = FALSE),
+    vending = recode(vending, "YES" = TRUE, "NO" = FALSE),
+      )
+  
+#check if the variables are right or not
+str(nyc_trans_df)
+```
+
